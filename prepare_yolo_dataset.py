@@ -1,29 +1,3 @@
-"""
-prepare_yolo_dataset.py
--------------------------
-Converte pares (imagem, mascara binaria) em anotacoes no formato de
-segmentacao do YOLOv8 (poligonos normalizados) e organiza a estrutura de
-pastas exigida pelo Ultralytics:
-
-    dataset/
-      images/train/*.jpg
-      images/val/*.jpg
-      labels/train/*.txt
-      labels/val/*.txt
-      data.yaml
-
-Isso e util em dois cenarios:
-  1. Voce anotou manualmente no Roboflow/CVAT e exportou em outro formato
-     (ex: mascaras PNG) e quer converter para YOLO-seg.
-  2. Voce quer usar as mascaras geradas pelo metodo classico como
-     "pseudo-rotulos" iniciais (revisando manualmente depois) para acelerar
-     a primeira rodada de anotacao.
-
-Se voce ja anotou direto no Roboflow e exportou no formato "YOLOv8" (o
-Roboflow tem essa opcao pronta no export), voce PODE PULAR este script -
-o Roboflow ja entrega a estrutura de pastas + data.yaml prontos.
-"""
-
 from __future__ import annotations
 import os
 import shutil
@@ -34,9 +8,6 @@ from pathlib import Path
 
 def mask_to_yolo_polygons(mask: np.ndarray, class_id: int = 0,
                            min_contour_area: int = 50) -> list[str]:
-    """Converte uma mascara binaria (HxW, bool ou 0/255) em linhas de
-    anotacao YOLO-seg: "class_id x1 y1 x2 y2 ... xn yn" com coordenadas
-    normalizadas (0-1)."""
     h, w = mask.shape[:2]
     mask_u8 = (mask.astype(np.uint8)) * 255
     contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -57,9 +28,6 @@ def mask_to_yolo_polygons(mask: np.ndarray, class_id: int = 0,
 def build_dataset(image_mask_pairs: list[tuple[str, np.ndarray]],
                    output_dir: str, val_fraction: float = 0.2,
                    class_names: list[str] = None) -> str:
-    """image_mask_pairs: lista de (caminho_da_imagem, mascara_binaria).
-    Copia as imagens e escreve os labels na estrutura esperada pelo YOLO.
-    Retorna o caminho do data.yaml gerado."""
     class_names = class_names or ["vegetacao"]
     output_dir = Path(output_dir)
 
